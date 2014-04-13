@@ -1,0 +1,108 @@
+Option Explicit
+'Script written by <Junichiro Horikawa>
+'Script copyrighted by <Junichiro Horikawa>
+'Script version Friday, 07 October 2011 12:32:12
+
+Call Main()
+Sub Main()
+	Dim arrObj
+	
+	arrObj = Rhino.GetObjects("Select Object To Order",,,True)
+	
+	Rhino.EnableRedraw(False)
+	
+	If IsArray(arrObj) Then
+		MoveOrder arrObj
+	End If
+	
+	Rhino.EnableRedraw(True)
+End Sub
+		
+
+Sub MoveOrder(arrObj)
+	Dim intNum,arrBox, strObj, arrPts(),arrPt, arrX(), arrY(),arrZ(),dblX,dblY,dblZ
+	intNum = -1
+	
+	For Each strObj In arrObj
+		intNum = intNum + 1
+		ReDim Preserve arrPts(intNum)
+		ReDim Preserve arrX(intNum)
+		ReDim Preserve arrY(intNum)
+		ReDim Preserve arrZ(intNum)
+		
+		arrBox = Rhino.BoundingBox(strObj)
+		arrPts(intNum) = arrBox(0)
+		arrX(intNum) = arrPts(intNum)(0)
+		arrY(intNum) = arrPts(intNum)(1)
+		arrZ(intNum) = arrPts(intNum)(2)	
+	Next
+	
+	
+	If intNum>0 Then
+		qsort arrZ, arrObj,arrPts
+		Dim range1, i1
+		range1 = (cMax(arrZ)-cMin(arrZ))/intNum
+		For i1 = 0 To intNum Step 1
+			Rhino.MoveObject arrObj(i1),arrPts(i1),Array(arrPts(i1)(0),arrPts(i1)(1),cMin(arrZ)+i1*range1)
+		Next
+	End If
+		
+	
+End Sub
+
+
+Function cMin(array)
+	Dim dblMin,temp
+	dblMin = 999999999999999999
+	For Each temp In array
+		If temp < dblMin THen
+			dblMin = temp
+		End If
+	Next
+	cMin = dblMin
+End Function
+
+Function cMax(array)
+	Dim dblMax,temp
+	dblMax = -999999999999999999
+	For Each temp In array
+		If temp > dblMax THen
+			dblMax = temp
+		End If
+	Next
+	cMax = dblMax
+End Function
+
+
+ ' クイックソートのインターフェース
+Sub qsort(array, array2,array3)
+	quicksort array, 0, UBound(array), array2,array3
+End Sub
+ 
+ ' クイックソート本体（再帰）
+Sub quicksort(array, first, last, array2,array3)
+	Dim point, f, l, tmp, tmp2,tmp3
+	point = array(first)
+	f = first: l = last
+	Do
+		While array(f) < point: f = f + 1: Wend
+		While array(l) > point: l = l - 1: Wend
+		If f >= l Then Exit Do
+		tmp = array(f): array(f) = array(l): array(l) = tmp
+		tmp2 = array2(f): array2(f) = array2(l): array2(l) = tmp2
+		tmp3 = array3(f): array3(f) = array3(l): array3(l) = tmp3
+		f = f + 1: l = l - 1
+	Loop
+	If first < f - 1 Then quicksort array, first, f - 1,array2,array3
+	If l + 1 < last  Then quicksort array, l + 1, last,array2,array3
+End Sub
+ 
+ ' 配列内容を表示する
+Sub dispArray(datas)
+	Dim data, str
+ 
+	For Each data In datas
+		str = str & data & vbCr
+	Next
+	MsgBox str
+End Sub
